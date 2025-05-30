@@ -1,8 +1,7 @@
-# netlify.toml en la raíz de tu proyecto
-[build]
-  publish = "Frontend/html" # O "Frontend" si tu index.html está directamente en la carpeta Frontend
-  command = "echo 'No build command needed for static site + functions'" # O tu comando de build si usas un framework JS
-
 [functions]
   directory = "netlify/functions"
 
+[[redirects]]
+from = "/api/*"
+to = ".../netlify/functions/:splat"
+status = 200
