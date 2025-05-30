@@ -6,11 +6,3 @@
 [functions]
   directory = "netlify/functions"
 
-# Redirecciones para tus funciones de Asignatura
-# Esto mapea tus peticiones /api/asignaturas a la función Asignatura.js
-# y permite que las subrutas como /assignments o /register-student sean manejadas por Express.
-[[redirects]]
-  from = "/api/asignaturas/*"
-  to = "/.netlify/functions/Asignatura/:splat" # :splat pasa el resto del path a la función
-  status = 200
-  force = true
