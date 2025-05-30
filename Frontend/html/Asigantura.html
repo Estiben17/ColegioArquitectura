@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Asignaturas y Estudiantes</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <h1>Sistema de Gestión Académica</h1>
+            <div class="user-info">
+                <span>Bienvenido, Profesor</span>
+                <i class="fas fa-user-circle"></i>
+            </div>
+        </header>
+
+        <nav class="app-sidebar">
+            <ul class="sidebar-menu">   
+                <li class="menu-item active">
+                    <a href="/Index.html">
+                        <span>Panel Principal</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="/Frontend/html/Departamento.html">
+                        <img src="/Frontend/img/redes.png" alt="Icono Departamento">
+                        <span>Departamentos</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="/Frontend/html/Estudiante.html">
+                        <img src="/Frontend/img/libro-de-lectura.png" alt="Icono Estudiantes">
+                        <span>Estudiantes</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="/Frontend/html/Asigantura.html">
+                        <img src="/Frontend/img/libros.png" alt="Icono Asignaturas">
+                        <span>Asignaturas</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="/Frontend/html/Asistencia.html">
+                        <img src="/Frontend/img/asistencia.png" alt="Icono Asistencias">
+                        <span>Asistencias</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <main class="app-main-content">
+            <!-- Sección para crear nuevas asignaturas -->
+            <section class="assignment-section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i class="fas fa-plus-circle"></i> Crear Nueva Asignatura
+                    </h2>
+                </div>
+
+                <div class="assignment-form-container">
+                    <form id="create-subject-form" class="assignment-form">
+                        <div class="form-group">
+                            <label for="subject-code">Código de la Asignatura:</label>
+                            <input type="text" id="subject-code" placeholder="Ej: MAT101" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="subject-name">Nombre de la Asignatura:</label>
+                            <input type="text" id="subject-name" placeholder="Ej: Matemáticas Básicas" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="subject-semester">Semestre:</label>
+                            <select id="subject-semester" required>
+                                <option value="">Seleccione semestre</option>
+                                <option value="1">Primer Semestre</option>
+                                <option value="2">Segundo Semestre</option>
+                                <option value="3">Tercer Semestre</option>
+                                <option value="4">Cuarto Semestre</option>
+                                <option value="5">Quinto Semestre</option>
+                                <option value="6">Sexto Semestre</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="subject-credits">Créditos:</label>
+                            <input type="number" id="subject-credits" min="1" max="10" placeholder="Ej: 3" required>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Crear Asignatura
+                            </button>
+                            <button type="reset" class="btn btn-cancel">
+                                <i class="fas fa-times"></i> Limpiar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Sección para registrar estudiantes en asignaturas -->
+            <section class="assignment-section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i class="fas fa-user-plus"></i> Registrar Estudiante en Asignatura
+                    </h2>
+                </div>
+
+                <div class="assignment-form-container">
+                    <form id="register-student-form" class="assignment-form">
+                        <div class="form-group">
+                            <label for="register-subject">Asignatura:</label>
+                            <select id="register-subject" required>
+                                <option value="">Seleccione una asignatura</option>
+                                <!-- Las opciones se llenarán dinámicamente desde la BD -->
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="register-group">Grupo:</label>
+                            <input type="text" id="register-group" placeholder="Ej: G1" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="register-semester">Semestre:</label>
+                            <select id="register-semester" required>
+                                <option value="">Seleccione semestre</option>
+                                <option value="1">Primer Semestre</option>
+                                <option value="2">Segundo Semestre</option>
+                                <option value="3">Tercer Semestre</option>
+                                <option value="4">Cuarto Semestre</option>
+                                <option value="5">Quinto Semestre</option>
+                                <option value="6">Sexto Semestre</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="register-dni">DNI del Estudiante:</label>
+                            <input type="text" id="register-dni" placeholder="Ingrese el DNI" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="register-name">Nombre:</label>
+                            <input type="text" id="register-name" placeholder="Nombre del estudiante" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="register-lastname">Apellidos:</label>
+                            <input type="text" id="register-lastname" placeholder="Apellidos del estudiante" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="register-email">Correo Electrónico:</label>
+                            <input type="email" id="register-email" placeholder="correo@ejemplo.com" required>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-user-plus"></i> Registrar Estudiante
+                            </button>
+                            <button type="reset" class="btn btn-cancel">
+                                <i class="fas fa-times"></i> Limpiar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Sección para mostrar asignaturas y estudiantes registrados -->
+            <section class="assignment-section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i class="fas fa-list"></i> Asignaturas y Estudiantes Registrados
+                    </h2>
+                </div>
+
+                <div class="tabs-container">
+                    <div class="tabs">
+                        <button class="tab-btn active" data-tab="subjects-tab">Asignaturas</button>
+                        <button class="tab-btn" data-tab="students-tab">Estudiantes</button>
+                    </div>
+
+                    <div id="subjects-tab" class="tab-content active">
+                        <div class="search-box">
+                            <input type="text" id="subject-search" placeholder="Buscar asignatura...">
+                            <button class="btn-search"><i class="fas fa-search"></i></button>
+                        </div>
+                        
+                        <table class="data-table subjects-table">
+                            <thead>
+                                <tr>
+                                    <th>Código</th>
+                                    <th>Nombre</th>
+                                    <th>Semestre</th>
+                                    <th>Créditos</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="subjects-list">
+                                <!-- Los registros se llenarán dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div id="students-tab" class="tab-content">
+                        <div class="search-box">
+                            <input type="text" id="student-search" placeholder="Buscar estudiante...">
+                            <button class="btn-search"><i class="fas fa-search"></i></button>
+                        </div>
+                        
+                        <table class="data-table students-table">
+                            <thead>
+                                <tr>
+                                    <th>Asignatura</th>
+                                    <th>Grupo</th>
+                                    <th>Semestre</th>
+                                    <th>DNI</th>
+                                    <th>Nombre</th>
+                                    <th>Apellidos</th>
+                                    <th>Correo</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="students-list">
+                                <!-- Los registros se llenarán dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="../js/Asignatura.js"></script>
+</body>
+</html>

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Estudiantes - Sistema Académico</title>
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+<body>
+  <div class="app-container">
+    <header class="app-header">
+      <h1>Sistema de Gestión Académica</h1>
+    </header>
+
+    <nav class="app-sidebar">
+            <ul class="sidebar-menu">   
+                <li class="menu-item active">
+                    <a href="/Index.html">
+                        <span>Panel Principal</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="/Frontend/html/Departamento.html">
+                        <img src="/Frontend/img/redes.png" alt="Icono Departamento">
+                        <span>Departamentos</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="/Frontend/html/Estudiante.html">
+                        <img src="/Frontend/img/libro-de-lectura.png" alt="Icono Estudiantes">
+                        <span>Estudiantes</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="/Frontend/html/Asigantura.html">
+                        <img src="/Frontend/img/libros.png" alt="Icono Asignaturas">
+                        <span>Asignaturas</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="/Frontend/html/Asistencia.html">
+                        <img src="/Frontend/img/asistencia.png" alt="Icono Asistencias">
+                        <span>Asistencias</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+    <main class="app-main-content">
+      <section class="students-section">
+        <div class="section-header">
+          <h2 class="section-title"><i class="fas fa-users"></i> Gestión de Estudiantes</h2>
+          <button class="btn btn-primary" id="add-student-btn"> <i class="fas fa-user-plus"></i> Nuevo Estudiante</button>
+        </div>
+
+        <div class="students-filters">
+          <div class="filter-group">
+            <label for="filter-faculty">Facultad:</label> <select id="filter-faculty"> <option value="">Todos</option>
+              </select>
+          </div>
+          <div class="filter-group">
+            <label for="filter-document-type">Tipo Documento:</label> <select id="filter-document-type"> <option value="">Todos</option>
+              </select>
+          </div>
+          <div class="search-box">
+            <input type="text" id="search" placeholder="Buscar estudiante..." /> <button class="btn-search" id="btn-search-student-filter"><i class="fas fa-search"></i></button> </div>
+        </div>
+
+        <table class="data-table students-table">
+          <thead>
+            <tr>
+              <th>Nombre Completo</th>
+              <th>Tipo Documento</th>
+              <th>Número Documento</th>
+              <th>Facultad</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="students-table-body"></tbody>
+        </table>
+
+        <div class="table-pagination" id="pagination">
+          <button class="btn-pagination" id="btn-prev-page"><i class="fas fa-chevron-left"></i></button> <span class="page-info" id="page-info">Página 1 de 1</span>
+          <button class="btn-pagination" id="btn-next-page"><i class="fas fa-chevron-right"></i></button> </div>
+
+        <div class="no-results" id="no-results" style="display: none;">
+          <p>No se encontraron estudiantes.</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal" id="student-modal" aria-hidden="true">
+    <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <span class="close-modal" role="button" aria-label="Cerrar modal">&times;</span>
+      <h3 class="modal-title" id="modal-title">Nuevo Estudiante</h3>
+      <form id="student-form" autocomplete="off">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="first-name">Primer Nombre:</label> <input type="text" id="first-name" name="first-name" required />
+          </div>
+          <div class="form-group">
+            <label for="second-name">Segundo Nombre:</label> <input type="text" id="second-name" name="second-name" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="first-surname">Primer Apellido:</label> <input type="text" id="first-surname" name="first-surname" required />
+          </div>
+          <div class="form-group">
+            <label for="second-surname">Segundo Apellido:</label> <input type="text" id="second-surname" name="second-surname" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="document-type">Tipo de Documento:</label> <select id="document-type" name="document-type" required>
+              <option value="" disabled selected>Seleccione un tipo de documento</option>
+              </select>
+          </div>
+          <div class="form-group">
+            <label for="document-number">Número de Documento:</label> <input type="text" id="document-number" name="document-number" required />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="faculty">Facultad:</label> <select id="faculty" name="faculty" required>
+              <option value="" disabled selected>Seleccione una facultad</option>
+              </select>
+          </div>
+          <div class="form-group">
+            <label for="program">Programa:</label> <input type="text" id="program" name="program" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="birth-date">Fecha de Nacimiento:</label> <input type="date" id="birth-date" name="birth-date" />
+          </div>
+          <div class="form-group">
+            <label for="gender">Género:</label> <select id="gender" name="gender">
+              <option value="" disabled selected>Seleccione</option>
+              <option value="Masculino">Masculino</option>
+              <option value="Femenino">Femenino</option>
+              <option value="Otro">Otro</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="semester">Semestre:</label> <input type="number" id="semester" name="semester" min="1" max="12" />
+          </div>
+          <div class="form-group">
+            <label for="average">Promedio:</label> <input type="number" id="average" name="average" step="0.01" min="0" max="5" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="email">Email:</label> <input type="email" id="email" name="email" />
+          </div>
+          <div class="form-group">
+            <label for="phone">Teléfono:</label> <input type="tel" id="phone" name="phone" />
+          </div>
+        </div>
+
+        <div class="form-group full-width">
+          <label for="address">Dirección:</label> <input type="text" id="address" name="address" />
+        </div>
+
+        <div class="form-group full-width">
+          <label for="status">Estado:</label> <select id="status" name="status">
+            <option value="Activo">Activo</option>
+            <option value="Inactivo">Inactivo</option>
+            <option value="Graduado">Graduado</option>
+            <option value="Retirado">Retirado</option>
+          </select>
+        </div>
+
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-cancel close-modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar Estudiante</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script type="module" src="../js/Estudiante.js"></script>
+</body>
+</html>

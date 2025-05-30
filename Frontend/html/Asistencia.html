@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asistencias - Sistema Académico</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <h1>Sistema de Gestión Académica</h1>
+        </header>
+
+        <nav class="app-sidebar">
+            <ul class="sidebar-menu">   
+                <li class="menu-item active">
+                    <a href="/Index.html">
+                        <span>Panel Principal</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="/Frontend/html/Departamento.html">
+                        <img src="/Frontend/img/redes.png" alt="Icono Departamento">
+                        <span>Departamentos</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="/Frontend/html/Estudiante.html">
+                        <img src="/Frontend/img/libro-de-lectura.png" alt="Icono Estudiantes">
+                        <span>Estudiantes</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="/Frontend/html/Asigantura.html">
+                        <img src="/Frontend/img/libros.png" alt="Icono Asignaturas">
+                        <span>Asignaturas</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="/Frontend/html/Asistencia.html">
+                        <img src="/Frontend/img/asistencia.png" alt="Icono Asistencias">
+                        <span>Asistencias</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+        
+        <main class="app-main-content">
+            <section class="attendance-section">
+                <div class="section-header">
+                    <h2 class="section-title"><i class="fas fa-clipboard-check"></i> Control de Asistencias</h2>
+                    <div class="action-buttons">
+                        <button class="btn btn-primary" id="btn-new-attendance">
+                            <i class="fas fa-plus"></i> Crear Asistencia
+                        </button>
+                        <button class="btn btn-secondary" id="btn-fill-attendance">
+                            <i class="fas fa-edit"></i> Llenar Asistencia
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Filtros de búsqueda -->
+                <div class="attendance-filters">
+                    <div class="filter-row">
+                        <div class="filter-group">
+                            <label for="filter-code">Código Asignatura:</label>
+                            <input type="text" id="filter-code" placeholder="Ingrese código">
+                        </div>
+                        <div class="filter-group">
+                            <label for="filter-subject">Asignatura:</label>
+                            <select id="filter-subject">
+                                <option value="all">Todas las asignaturas</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label for="filter-group">Grupo:</label>
+                            <select id="filter-group">
+                                <option value="all">Todos los grupos</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="filter-row">
+                        <div class="filter-group">
+                            <label for="filter-semester">Semestre:</label>
+                            <select id="filter-semester">
+                                <option value="all">Todos los semestres</option>
+                                <option value="2023-1">2023-1</option>
+                                <option value="2023-2">2023-2</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label for="filter-date-from">Fecha Inicio:</label>
+                            <input type="date" id="filter-date-from">
+                        </div>
+                        <div class="filter-group">
+                            <label for="filter-date-to">Fecha Fin:</label>
+                            <input type="date" id="filter-date-to">
+                        </div>
+                    </div>
+                    <div class="filter-row">
+                        <div class="filter-group">
+                            <label for="filter-time-from">Hora Inicio:</label>
+                            <input type="time" id="filter-time-from">
+                        </div>
+                        <div class="filter-group">
+                            <label for="filter-time-to">Hora Fin:</label>
+                            <input type="time" id="filter-time-to">
+                        </div>
+                        <button class="btn btn-primary" id="btn-filter">
+                            <i class="fas fa-search"></i> Buscar
+                        </button>
+                        <button class="btn btn-secondary" id="btn-clear-filters">
+                            <i class="fas fa-broom"></i> Limpiar
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Tabla de asistencias -->
+                <table class="data-table attendance-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Fecha</th>
+                            <th>Hora Inicio</th>
+                            <th>Hora Fin</th>
+                            <th>Código Asignatura</th>
+                            <th>Asignatura</th>
+                            <th>Grupo</th>
+                            <th>Semestre</th>
+                            <th>Estudiantes</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="attendance-table-body">
+                        <!-- Datos se llenarán dinámicamente -->
+                    </tbody>
+                </table>
+                
+                <!-- Estadísticas -->
+                <div class="attendance-stats">
+                    <div class="stat-card">
+                        <h4>Total Asistencias</h4>
+                        <span id="total-attendance">0</span>
+                    </div>
+                    <div class="stat-card">
+                        <h4>Asistencias Registradas</h4>
+                        <span id="registered-attendance">0</span>
+                    </div>
+                    <div class="stat-card">
+                        <h4>Porcentaje Asistencia</h4>
+                        <span id="attendance-percentage">0%</span>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modal para crear nueva asistencia -->
+    <div class="modal wide-modal" id="attendance-modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h3 class="modal-title">Nueva Lista de Asistencia</h3>
+            <form id="attendance-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="attendance-code">Código Asignatura:</label>
+                        <input type="text" id="attendance-code" required placeholder="Ej: MAT-101">
+                    </div>
+                    <div class="form-group">
+                        <label for="attendance-subject">Asignatura:</label>
+                        <select id="attendance-subject" required>
+                            <option value="">Seleccione una asignatura</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="attendance-group">Grupo:</label>
+                        <select id="attendance-group" required>
+                            <option value="">Seleccione un grupo</option>
+                            <option value="1">Grupo 1</option>
+                            <option value="2">Grupo 2</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="attendance-semester">Semestre:</label>
+                        <select id="attendance-semester" required>
+                            <option value="">Seleccione un semestre</option>
+                            <option value="2023-1">2023-1</option>
+                            <option value="2023-2">2023-2</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="attendance-date">Fecha:</label>
+                        <input type="date" id="attendance-date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="attendance-time-start">Hora Inicio:</label>
+                        <input type="time" id="attendance-time-start" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="attendance-time-end">Hora Fin:</label>
+                        <input type="time" id="attendance-time-end" required>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn btn-cancel close-modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Crear Lista</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para llenar asistencia -->
+    <div class="modal wide-modal" id="fill-attendance-modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h3 class="modal-title">Registrar Asistencia</h3>
+            <form id="fill-attendance-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="fill-attendance-code">Código Asignatura:</label>
+                        <input type="text" id="fill-attendance-code" required placeholder="Ingrese código">
+                        <button type="button" class="btn btn-small" id="btn-search-attendance">
+                            <i class="fas fa-search"></i> Buscar
+                        </button>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="fill-attendance-date">Fecha:</label>
+                        <input type="date" id="fill-attendance-date">
+                    </div>
+                    <div class="form-group">
+                        <label for="fill-attendance-time">Hora:</label>
+                        <input type="time" id="fill-attendance-time">
+                    </div>
+                </div>
+                
+                <div class="search-by-document">
+                    <h4>Buscar por documento</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="document-type">Tipo Documento:</label>
+                            <select id="document-type">
+                                <option value="CC">Cédula</option>
+                                <option value="TI">Tarjeta Identidad</option>
+                                <option value="CE">Cédula Extranjería</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="document-number">Número:</label>
+                            <input type="text" id="document-number" placeholder="Número documento">
+                            <button type="button" class="btn btn-small" id="btn-search-student">
+                                <i class="fas fa-search"></i> Buscar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <h4 class="attendance-list-title">Registro de Asistencia</h4>
+                <table class="attendance-details-table">
+                    <thead>
+                        <tr>
+                            <th>Estudiante</th>
+                            <th>Documento</th>
+                            <th>Asistencia</th>
+                            <th>Observaciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="attendance-students-list">
+                        <!-- Datos se llenarán dinámicamente -->
+                    </tbody>
+                </table>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn btn-cancel close-modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Asistencia</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para consultar asistencia -->
+    <div class="modal wide-modal" id="view-attendance-modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h3 class="modal-title">Detalle de Asistencia</h3>
+            <div class="attendance-info">
+                <div class="info-row">
+                    <span class="info-label">Asignatura:</span>
+                    <span id="view-subject-name"></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Código:</span>
+                    <span id="view-subject-code"></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Grupo:</span>
+                    <span id="view-group"></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Semestre:</span>
+                    <span id="view-semester"></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Fecha:</span>
+                    <span id="view-date"></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Horario:</span>
+                    <span id="view-time"></span>
+                </div>
+            </div>
+            
+            <h4 class="attendance-list-title">Detalle de Asistencias</h4>
+            <table class="attendance-details-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Estudiante</th>
+                        <th>Documento</th>
+                        <th>Asistencia</th>
+                        <th>Observaciones</th>
+                    </tr>
+                </thead>
+                <tbody id="view-attendance-list">
+                    <!-- Datos se llenarán dinámicamente -->
+                </tbody>
+            </table>
+            
+            <div class="attendance-summary">
+                <div class="summary-row">
+                    <span>Total estudiantes:</span>
+                    <span id="view-total-students">0</span>
+                </div>
+                <div class="summary-row">
+                    <span>Presentes:</span>
+                    <span id="view-present">0</span>
+                </div>
+                <div class="summary-row">
+                    <span>Ausentes:</span>
+                    <span id="view-absent">0</span>
+                </div>
+                <div class="summary-row">
+                    <span>Porcentaje asistencia:</span>
+                    <span id="view-percentage">0%</span>
+                </div>
+            </div>
+            
+            <div class="form-actions">
+                <button type="button" class="btn btn-cancel close-modal">Cerrar</button>
+                <button type="button" class="btn btn-secondary" id="btn-print-attendance">
+                    <i class="fas fa-print"></i> Imprimir
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/Asistencia.js"></script>
+</body>
+</html> 
