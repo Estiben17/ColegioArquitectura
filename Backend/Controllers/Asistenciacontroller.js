@@ -1,87 +1,196 @@
-// c:\Users\estib\Documents\ArquitecturaColegio\Backend\Controllers\Asistenciacontroller.js
+// Backend/Controllers/AsistenciaController.js
 
-// Funciones existentes (ya referenciadas en Asistenciaroutes.js)
-exports.obtenerAsistencias = async (req, res) => {
-    // TODO: Implementar lógica para obtener todas las listas de asistencia.
-    // Considerar filtros enviados en req.query (ej. code, subject, group, semester, dateFrom, dateTo, etc.)
-    // Ejemplo: const filtros = req.query; const asistencias = await Asistencia.find(filtros);
-    // res.json(asistencias);
-    res.status(501).json({ message: 'obtenerAsistencias no implementado' });
+const db = require('../config/firebaseConfig'); // Importa la instancia de Firestore
+
+exports.getAllAssistanceRecords = async (req, res) => {
+    try {
+        const asistenciasRef = db.collection('asistencias');
+        const snapshot = await asistenciasRef.get();
+        const asistencias = [];
+        snapshot.forEach(doc => {
+            asistencias.push({ id: doc.id, ...doc.data() });
+        });
+        res.status(200).json(asistencias);
+    } catch (error) {
+        console.error("Error al obtener todos los registros de asistencia:", error);
+        res.status(500).json({ message: 'Error interno del servidor', error: error.message });
+    }
 };
 
-exports.obtenerAsistenciaPorId = async (req, res) => {
-    const { id } = req.params;
-    // TODO: Implementar lógica para obtener una lista de asistencia por su ID
-    // Ejemplo: const asistencia = await Asistencia.findById(id).populate('studentsPresent.studentId').populate('studentsAbsent.studentId');
-    // if (!asistencia) return res.status(404).json({ message: 'Asistencia no encontrada' });
-    // res.json(asistencia);
-    res.status(501).json({ message: `obtenerAsistenciaPorId para ID ${id} no implementado` });
+exports.createAssistanceRecord = async (req, res) => {
+    try {
+        // Campos basados en tu Firestore:
+        const { asignaturaID, codigoAsignatura, fecha, horaInicio, horaFin, nombreAsignatura, registros, semestreAsignatura } = req.body;
+
+        // Validación básica
+        if (!asignaturaID || !fecha || !horaInicio || !horaFin || !nombreAsignatura || !semestreAsignatura || !registros) {
+            return res.status(400).json({ message: 'Todos los campos son obligatorios para crear un registro de asistencia.' });
+        }
+
+        const semestreAsignaturaNum = parseInt(semestreAsignatura);
+        if (isNaN(semestreAsignaturaNum)) {
+             return res.status(400).json({ message: 'Semestre de asignatura debe ser un número válido.' });
+        }
+        
+        // Convertir la fecha y horas a un formato más adecuado (Timestamp o Date)
+        // Puedes recibir la fecha como string y convertirla a Date
+        const fechaAsistencia = new Date(fecha); // Asegúrate de que el formato de 'fecha' sea parseable
+
+        // La horaInicio y horaFin también podrían ser parte del objeto Date o strings estandarizados
+        // Para este ejemplo, los mantendremos como string si vienen así.
+
+        const nuevaAsistenciaRef = await db.collection('asistencias').add({
+            asignaturaID,
+            codigoAsignatura: codigoAsignatura || asignaturaID, // Si codigoAsignatura está vacío en BD, usa asignaturaID
+            fecha: fechaAsistencia, 
+            horaInicio: horaInicio,
+            horaFin: horaFin,
+            nombreAsignatura,
+            registros: registros, // Esto espera un objeto como { estudianteID: true }
+            semestreAsignatura: semestreAsignaturaNum
+        });
+
+        res.status(201).json({ message: 'Registro de asistencia creado exitosamente', asistencia: { id: nuevaAsistenciaRef.id, ...req.body, fecha: fechaAsistencia, semestreAsignatura: semestreAsignaturaNum } });
+
+    } catch (error) {
+        console.error("Error al crear registro de asistencia:", error);
+        res.status(500).json({ message: 'Error interno del servidor', error: error.message });
+    }
 };
 
-exports.crearAsistencia = async (req, res) => {
-    // Esto crea una "hoja" o "sesión" de asistencia, aún sin estudiantes marcados.
-    // TODO: Implementar lógica para crear una nueva lista de asistencia (sesión)
-    // Ejemplo: const { code, subjectCode, subjectName, group, semester, date, timeStart, timeEnd } = req.body;
-    // const nuevaSesionAsistencia = new Asistencia({ code, subjectCode, ... });
-    // await nuevaSesionAsistencia.save();
-    // res.status(201).json({ message: 'Sesión de asistencia creada', sesion: nuevaSesionAsistencia });
-    res.status(501).json({ message: 'crearAsistencia no implementado' });
+// Obtener un registro de asistencia por ID
+exports.getAssistanceRecordById = async (req, res) => {
+    const { id } = req.params; // ID del documento de asistencia
+    try {
+        const asistenciaRef = db.collection('asistencias').doc(id);
+        const doc = await asistenciaRef.get();
+
+        if (!doc.exists) {
+            return res.status(404).json({ message: 'Registro de asistencia no encontrado.' });
+        }
+
+        res.status(200).json({ id: doc.id, ...doc.data() });
+    } catch (error) {
+        console.error(`Error al obtener registro de asistencia con ID ${id}:`, error);
+        res.status(500).json({ message: 'Error interno del servidor', error: error.message });
+    }
 };
 
-exports.actualizarAsistencia = async (req, res) => {
-    const { id } = req.params;
-    // Esto podría ser para actualizar los metadatos de la sesión de asistencia (fecha, hora, etc.)
-    // O, si es más complejo, para guardar la asistencia de los estudiantes (ver registrarAsistenciaEstudiantes).
-    // TODO: Implementar lógica para actualizar una lista de asistencia
-    // Ejemplo: const sesionActualizada = await Asistencia.findByIdAndUpdate(id, req.body, { new: true });
-    // if (!sesionActualizada) return res.status(404).json({ message: 'Sesión de asistencia no encontrada' });
-    // res.json({ message: 'Sesión de asistencia actualizada', sesion: sesionActualizada });
-    res.status(501).json({ message: `actualizarAsistencia para ID ${id} no implementado` });
+// Actualizar un registro de asistencia por ID
+exports.updateAssistanceRecordById = async (req, res) => {
+    const { id } = req.params; // ID del documento de asistencia
+    const dataToUpdate = req.body;
+    try {
+        if (Object.keys(dataToUpdate).length === 0) {
+            return res.status(400).json({ message: 'No hay datos para actualizar el registro de asistencia.' });
+        }
+
+        // Opcional: Convertir 'semestreAsignatura' a número si viene en la solicitud
+        if (dataToUpdate.semestreAsignatura !== undefined) {
+            const semestreAsignaturaNum = parseInt(dataToUpdate.semestreAsignatura);
+            if (isNaN(semestreAsignaturaNum)) return res.status(400).json({ message: 'Semestre de asignatura debe ser un número válido.' });
+            dataToUpdate.semestreAsignatura = semestreAsignaturaNum;
+        }
+
+        // Opcional: Convertir 'fecha' a Date si viene en la solicitud
+        if (dataToUpdate.fecha !== undefined && typeof dataToUpdate.fecha === 'string') {
+            dataToUpdate.fecha = new Date(dataToUpdate.fecha);
+        }
+
+        const asistenciaRef = db.collection('asistencias').doc(id);
+        const doc = await asistenciaRef.get();
+        if (!doc.exists) {
+            return res.status(404).json({ message: 'Registro de asistencia no encontrado.' });
+        }
+
+        await asistenciaRef.update(dataToUpdate);
+        res.status(200).json({ message: `Registro de asistencia con ID ${id} actualizado exitosamente` });
+    } catch (error) {
+        console.error(`Error al actualizar registro de asistencia con ID ${id}:`, error);
+        res.status(500).json({ message: 'Error interno del servidor', error: error.message });
+    }
 };
 
-exports.eliminarAsistencia = async (req, res) => {
-    const { id } = req.params;
-    // TODO: Implementar lógica para eliminar una lista de asistencia
-    // Ejemplo: const sesionEliminada = await Asistencia.findByIdAndDelete(id);
-    // if (!sesionEliminada) return res.status(404).json({ message: 'Sesión de asistencia no encontrada' });
-    // res.json({ message: 'Sesión de asistencia eliminada' });
-    res.status(501).json({ message: `eliminarAsistencia para ID ${id} no implementado` });
+// Eliminar un registro de asistencia por ID
+exports.deleteAssistanceRecordById = async (req, res) => {
+    const { id } = req.params; // ID del documento de asistencia
+    try {
+        const asistenciaRef = db.collection('asistencias').doc(id);
+        const doc = await asistenciaRef.get();
+        if (!doc.exists) {
+            return res.status(404).json({ message: 'Registro de asistencia no encontrado.' });
+        }
+
+        await asistenciaRef.delete();
+        res.status(200).json({ message: `Registro de asistencia con ID ${id} eliminado exitosamente` });
+    } catch (error) {
+        console.error(`Error al eliminar registro de asistencia con ID ${id}:`, error);
+        res.status(500).json({ message: 'Error interno del servidor', error: error.message });
+    }
 };
 
-// --- NUEVAS FUNCIONES ---
+// --- Funciones para manejar los registros de estudiantes dentro de un registro de asistencia ---
+// Si quieres añadir/eliminar estudiantes individuales de un registro de asistencia existente.
 
-// Para buscar una lista de asistencia por su código único (usado en "Fill Attendance")
-exports.obtenerAsistenciaPorCodigo = async (req, res) => {
-    const { codigo } = req.params;
-    // TODO: Implementar lógica para buscar una sesión de asistencia por su código
-    // Ejemplo: const sesionAsistencia = await Asistencia.findOne({ code: codigo });
-    // if (!sesionAsistencia) return res.status(404).json({ message: 'Sesión de asistencia no encontrada con ese código' });
-    // res.json(sesionAsistencia);
-    res.status(501).json({ message: `obtenerAsistenciaPorCodigo para código ${codigo} no implementado` });
+exports.addStudentToAssistanceRecord = async (req, res) => {
+    const { id } = req.params; // ID del registro de asistencia
+    const { estudianteId } = req.body;
+
+    try {
+        if (!estudianteId) {
+            return res.status(400).json({ message: 'ID del estudiante es requerido.' });
+        }
+
+        const asistenciaRef = db.collection('asistencias').doc(id);
+        const doc = await asistenciaRef.get();
+
+        if (!doc.exists) {
+            return res.status(404).json({ message: 'Registro de asistencia no encontrado.' });
+        }
+
+        // Actualizar el mapa 'registros' para incluir el nuevo estudiante
+        // FieldValue.set() para actualizar campos anidados sin sobreescribir todo el mapa
+        const admin = require('firebase-admin'); // Se necesita importar admin para FieldValue
+
+        await asistenciaRef.update({
+            [`registros.${estudianteId}`]: true // Añade/actualiza la clave estudianteId con valor true
+        });
+
+        res.status(200).json({ message: `Estudiante ${estudianteId} añadido al registro de asistencia ${id}.` });
+
+    } catch (error) {
+        console.error(`Error al añadir estudiante al registro de asistencia ${id}:`, error);
+        res.status(500).json({ message: 'Error interno del servidor', error: error.message });
+    }
 };
 
-// Para obtener los estudiantes que deberían estar en una sesión de asistencia (ej. por asignatura y grupo)
-exports.obtenerEstudiantesParaSesionAsistencia = async (req, res) => {
-    const { asistenciaId } = req.params; // o podrías pasar subjectCode y group en req.query
-    // TODO: Primero, obtener la sesión de asistencia para saber la asignatura/grupo.
-    // Luego, buscar estudiantes que coincidan (ej. de la tabla de Inscripciones o Estudiantes).
-    // Ejemplo: const sesion = await Asistencia.findById(asistenciaId);
-    // if (!sesion) return res.status(404).json({ message: 'Sesión no encontrada'});
-    // const estudiantes = await Estudiante.find({ /* criterios basados en sesion.subjectCode, sesion.group */ });
-    // res.json(estudiantes);
-    res.status(501).json({ message: `obtenerEstudiantesParaSesionAsistencia para sesión ID ${asistenciaId} no implementado` });
-};
+exports.removeStudentFromAssistanceRecord = async (req, res) => {
+    const { id } = req.params; // ID del registro de asistencia
+    const { estudianteId } = req.body; // ID del estudiante a remover
 
-// Para guardar la asistencia (presentes/ausentes) de los estudiantes para una sesión específica
-exports.registrarAsistenciaEstudiantes = async (req, res) => {
-    const { asistenciaId } = req.params;
-    const { studentsPresent, studentsAbsent } = req.body; // Array de IDs de estudiantes y observaciones
-    // TODO: Implementar lógica para actualizar la sesión de asistencia con los estudiantes presentes/ausentes
-    // Ejemplo: const sesion = await Asistencia.findById(asistenciaId);
-    // if (!sesion) return res.status(404).json({ message: 'Sesión de asistencia no encontrada' });
-    // sesion.studentsPresent = studentsPresent; // [{ studentId: '...', observations: '...' }]
-    // sesion.studentsAbsent = studentsAbsent;   // [{ studentId: '...', observations: '...' }]
-    // await sesion.save();
-    // res.json({ message: 'Asistencia de estudiantes registrada', sesion });
-    res.status(501).json({ message: `registrarAsistenciaEstudiantes para sesión ID ${asistenciaId} no implementado` });
+    try {
+        if (!estudianteId) {
+            return res.status(400).json({ message: 'ID del estudiante es requerido.' });
+        }
+
+        const asistenciaRef = db.collection('asistencias').doc(id);
+        const doc = await asistenciaRef.get();
+
+        if (!doc.exists) {
+            return res.status(404).json({ message: 'Registro de asistencia no encontrado.' });
+        }
+        
+        const admin = require('firebase-admin'); // Se necesita importar admin para FieldValue
+
+        // Eliminar el campo específico del mapa 'registros'
+        await asistenciaRef.update({
+            [`registros.${estudianteId}`]: admin.firestore.FieldValue.delete() 
+        });
+
+        res.status(200).json({ message: `Estudiante ${estudianteId} eliminado del registro de asistencia ${id}.` });
+
+    } catch (error) {
+        console.error(`Error al eliminar estudiante del registro de asistencia ${id}:`, error);
+        res.status(500).json({ message: 'Error interno del servidor', error: error.message });
+    }
 };

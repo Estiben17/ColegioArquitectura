@@ -1,77 +1,236 @@
-// c:\Users\estib\Documents\ArquitecturaColegio\Backend\Controllers\Asignaturacontroller.js
+// Backend/Controllers/Asignaturacontroller.js
 
-// Funciones existentes (ya referenciadas en Asignaturaroutes.js)
+const db = require('../config/firebaseConfig'); // Importa la instancia de Firestore
+
 exports.getAllAssignments = async (req, res) => {
-    // TODO: Implementar lógica para obtener todas las asignaturas
-    // Ejemplo: const asignaturas = await Asignatura.find();
-    // res.json(asignaturas);
-    res.status(501).json({ message: 'getAllAssignments no implementado' });
+    try {
+        const asignaturasRef = db.collection('asignaturas'); // Accede a la colección 'asignaturas'
+        const snapshot = await asignaturasRef.get(); // Obtiene todos los documentos
+        const asignaturas = [];
+        snapshot.forEach(doc => {
+            // Asegúrate de que los IDs de los documentos sean incluidos en la respuesta
+            asignaturas.push({ id: doc.id, ...doc.data() }); 
+        });
+        res.status(200).json(asignaturas);
+    } catch (error) {
+        console.error("Error al obtener todas las asignaturas:", error);
+        res.status(500).json({ message: 'Error interno del servidor', error: error.message });
+    }
 };
 
 exports.createAssignment = async (req, res) => {
-    // TODO: Implementar lógica para crear una nueva asignatura
-    // Ejemplo: const nuevaAsignatura = new Asignatura(req.body);
-    // await nuevaAsignatura.save();
-    // res.status(201).json({ message: 'Asignatura creada', asignatura: nuevaAsignatura });
-    res.status(501).json({ message: 'createAssignment no implementado' });
+    try {
+        const { codigo, nombre, semestre, creditos, departamentoId } = req.body;
+
+        // Validación de entrada
+        if (!codigo || !nombre || semestre === undefined || creditos === undefined || !departamentoId) {
+            return res.status(400).json({ message: 'Todos los campos (codigo, nombre, semestre, creditos, departamentoId) son obligatorios.' });
+        }
+
+        // Convertir semestre y creditos a números, ya que en tu Firestore los tienes como string en la imagen,
+        // pero idealmente deberían ser números para operaciones o lógica numérica.
+        const semestreNum = parseInt(semestre);
+        const creditosNum = parseInt(creditos);
+
+        if (isNaN(semestreNum) || isNaN(creditosNum)) {
+            return res.status(400).json({ message: 'Semestre y creditos deben ser números válidos.' });
+        }
+
+        // Verificar si la asignatura ya existe por su código (ID de documento)
+        const existingAssignment = await db.collection('asignaturas').doc(codigo).get();
+        if (existingAssignment.exists) {
+            return res.status(409).json({ message: `La asignatura con código ${codigo} ya existe.` });
+        }
+
+        // Crear un documento en la colección 'asignaturas' usando 'codigo' como ID
+        const asignaturaRef = db.collection('asignaturas').doc(codigo);
+        await asignaturaRef.set({ 
+            nombre: nombre,
+            semestre: semestreNum, 
+            creditos: creditosNum, 
+            departamentoId: departamentoId
+        });
+
+        res.status(201).json({ message: 'Asignatura creada exitosamente', asignatura: { id: codigo, ...req.body, semestre: semestreNum, creditos: creditosNum } });
+
+    } catch (error) {
+        console.error("Error al crear asignatura:", error);
+        res.status(500).json({ message: 'Error interno del servidor', error: error.message });
+    }
 };
 
+exports.updateAssignmentById = async (req, res) => {
+    const { id } = req.params; // 'id' es el código de la asignatura (ej. PROG004)
+    const dataToUpdate = req.body;
+
+    try {
+        if (Object.keys(dataToUpdate).length === 0) {
+            return res.status(400).json({ message: 'No hay datos para actualizar.' });
+        }
+
+        // Opcional: Convertir 'semestre' y 'creditos' a números si vienen en la solicitud
+        if (dataToUpdate.semestre !== undefined) {
+            const semestreNum = parseInt(dataToUpdate.semestre);
+            if (isNaN(semestreNum)) return res.status(400).json({ message: 'Semestre debe ser un número válido.' });
+            dataToUpdate.semestre = semestreNum;
+        }
+        if (dataToUpdate.creditos !== undefined) {
+            const creditosNum = parseInt(dataToUpdate.creditos);
+            if (isNaN(creditosNum)) return res.status(400).json({ message: 'Creditos deben ser un número válido.' });
+            dataToUpdate.creditos = creditosNum;
+        }
+
+        const asignaturaRef = db.collection('asignaturas').doc(id);
+        const doc = await asignaturaRef.get();
+
+        if (!doc.exists) {
+            return res.status(404).json({ message: 'Asignatura no encontrada.' });
+        }
+
+        await asignaturaRef.update(dataToUpdate); // 'update' actualiza campos existentes, no sobrescribe todo el documento
+        res.status(200).json({ message: `Asignatura con ID ${id} actualizada exitosamente` });
+    } catch (error) {
+        console.error(`Error al actualizar asignatura con ID ${id}:`, error);
+        res.status(500).json({ message: 'Error interno del servidor', error: error.message });
+    }
+};
+
+exports.deleteAssignmentById = async (req, res) => {
+    const { id } = req.params; // 'id' es el código de la asignatura (ej. PROG004)
+    try {
+        const asignaturaRef = db.collection('asignaturas').doc(id);
+        const doc = await asignaturaRef.get();
+
+        if (!doc.exists) {
+            return res.status(404).json({ message: 'Asignatura no encontrada.' });
+        }
+
+        await asignaturaRef.delete();
+        res.status(200).json({ message: `Asignatura con ID ${id} eliminada exitosamente` });
+    } catch (error) {
+        console.error(`Error al eliminar asignatura con ID ${id}:`, error);
+        res.status(500).json({ message: 'Error interno del servidor', error: error.message });
+    }
+};
+
+// --- Funciones para Inscripciones de Asignaturas ---
+// Colección: 'inscripcionesAsignaturas'
+// Document ID: Generado automáticamente por Firestore (ej. xjQ2Knf2jaGKeJTqubD)
+
 exports.getAllRegisteredStudents = async (req, res) => {
-    // TODO: Implementar lógica para obtener todos los estudiantes registrados en asignaturas
-    // Esto podría implicar joins o consultas a una tabla de inscripciones.
-    // Ejemplo: const inscripciones = await Inscripcion.find().populate('estudiante').populate('asignatura');
-    // res.json(inscripciones);
-    res.status(501).json({ message: 'getAllRegisteredStudents no implementado' });
+    try {
+        const inscripcionesRef = db.collection('inscripcionesAsignaturas');
+        const snapshot = await inscripcionesRef.get();
+        const inscripciones = [];
+        snapshot.forEach(doc => {
+            inscripciones.push({ id: doc.id, ...doc.data() });
+        });
+        res.status(200).json(inscripciones);
+    } catch (error) {
+        console.error("Error al obtener todas las inscripciones de estudiantes:", error);
+        res.status(500).json({ message: 'Error interno del servidor', error: error.message });
+    }
 };
 
 exports.registerStudent = async (req, res) => {
-    // TODO: Implementar lógica para registrar un estudiante en una asignatura
-    // Ejemplo: const { studentId, subjectId, group, semester, dni, name, lastname, email } = req.body;
-    // const nuevaInscripcion = new Inscripcion({ estudiante: studentId, asignatura: subjectId, ... });
-    // await nuevaInscripcion.save();
-    // res.status(201).json({ message: 'Estudiante registrado en asignatura', inscripcion: nuevaInscripcion });
-    res.status(501).json({ message: 'registerStudent no implementado' });
+    try {
+        // Campos que esperaríamos en el body de la solicitud basados en tu Firestore:
+        const { 
+            asignaturaId, estudianteId, grupo, semestreInscripcion, 
+            apellidosEstudiante, correoEstudiante, nombreAsignatura, nombresEstudiante 
+        } = req.body;
+        
+        // Validación básica
+        if (!asignaturaId || !estudianteId || !grupo || semestreInscripcion === undefined || 
+            !apellidosEstudiante || !correoEstudiante || !nombreAsignatura || !nombresEstudiante) {
+            return res.status(400).json({ message: 'Faltan campos obligatorios para registrar al estudiante en la asignatura.' });
+        }
+
+        const semestreInscripcionNum = parseInt(semestreInscripcion);
+        if (isNaN(semestreInscripcionNum)) {
+             return res.status(400).json({ message: 'Semestre de inscripción debe ser un número válido.' });
+        }
+
+        // Opcional: Verificar si el estudiante y la asignatura existen en sus respectivas colecciones
+        // Esto sería una buena práctica para asegurar la integridad referencial.
+        // const asignaturaDoc = await db.collection('asignaturas').doc(asignaturaId).get();
+        // if (!asignaturaDoc.exists) {
+        //     return res.status(404).json({ message: `Asignatura con ID ${asignaturaId} no encontrada.` });
+        // }
+        // const estudianteDoc = await db.collection('estudiantes').doc(estudianteId).get();
+        // if (!estudianteDoc.exists) {
+        //     return res.status(404).json({ message: `Estudiante con ID ${estudianteId} no encontrado.` });
+        // }
+
+        // Crear una nueva inscripción, Firestore generará automáticamente el ID del documento
+        const nuevaInscripcionRef = await db.collection('inscripcionesAsignaturas').add({
+            asignaturaId,
+            estudianteId,
+            grupo,
+            semestreInscripcion: semestreInscripcionNum,
+            apellidosEstudiante,
+            correoEstudiante,
+            nombreAsignatura,
+            nombresEstudiante,
+            fechaInscripcion: new Date() // Opcional: Añadir un timestamp de la inscripción
+        });
+
+        res.status(201).json({ 
+            message: 'Estudiante registrado en asignatura exitosamente', 
+            inscripcion: { id: nuevaInscripcionRef.id, ...req.body, semestreInscripcion: semestreInscripcionNum } 
+        });
+
+    } catch (error) {
+        console.error("Error al registrar estudiante en asignatura:", error);
+        res.status(500).json({ message: 'Error interno del servidor', error: error.message });
+    }
 };
 
-// --- NUEVAS FUNCIONES ---
-
-// Para manejar la edición de una asignatura
-exports.updateAssignmentById = async (req, res) => {
-    const { id } = req.params;
-    // TODO: Implementar lógica para actualizar una asignatura por su ID
-    // Ejemplo: const asignaturaActualizada = await Asignatura.findByIdAndUpdate(id, req.body, { new: true });
-    // if (!asignaturaActualizada) return res.status(404).json({ message: 'Asignatura no encontrada' });
-    // res.json({ message: 'Asignatura actualizada', asignatura: asignaturaActualizada });
-    res.status(501).json({ message: `updateAssignmentById para ID ${id} no implementado` });
-};
-
-// Para manejar la eliminación de una asignatura
-exports.deleteAssignmentById = async (req, res) => {
-    const { id } = req.params;
-    // TODO: Implementar lógica para eliminar una asignatura por su ID
-    // Ejemplo: const asignaturaEliminada = await Asignatura.findByIdAndDelete(id);
-    // if (!asignaturaEliminada) return res.status(404).json({ message: 'Asignatura no encontrada' });
-    // res.json({ message: 'Asignatura eliminada' });
-    res.status(501).json({ message: `deleteAssignmentById para ID ${id} no implementado` });
-};
-
-// Para manejar la edición de la información de un estudiante registrado en una asignatura
-// (Esto podría ser más complejo, dependiendo de si editas la inscripción o el estudiante en sí)
 exports.updateRegisteredStudentInAssignment = async (req, res) => {
-    const { registrationId } = req.params; // Asumiendo que la inscripción tiene un ID único
-    // TODO: Implementar lógica para actualizar datos de una inscripción
-    // Ejemplo: const inscripcionActualizada = await Inscripcion.findByIdAndUpdate(registrationId, req.body, { new: true });
-    // if (!inscripcionActualizada) return res.status(404).json({ message: 'Inscripción no encontrada' });
-    // res.json({ message: 'Inscripción actualizada', inscripcion: inscripcionActualizada });
-    res.status(501).json({ message: `updateRegisteredStudentInAssignment para ID ${registrationId} no implementado` });
+    const { registrationId } = req.params; // ID del documento de inscripción (generado por Firestore)
+    const dataToUpdate = req.body;
+
+    try {
+        if (Object.keys(dataToUpdate).length === 0) {
+            return res.status(400).json({ message: 'No hay datos para actualizar la inscripción.' });
+        }
+
+        // Opcional: Convertir 'semestreInscripcion' a número si viene en la solicitud
+        if (dataToUpdate.semestreInscripcion !== undefined) {
+            const semestreInscripcionNum = parseInt(dataToUpdate.semestreInscripcion);
+            if (isNaN(semestreInscripcionNum)) return res.status(400).json({ message: 'Semestre de inscripción debe ser un número válido.' });
+            dataToUpdate.semestreInscripcion = semestreInscripcionNum;
+        }
+
+        const inscripcionRef = db.collection('inscripcionesAsignaturas').doc(registrationId);
+        const doc = await inscripcionRef.get();
+
+        if (!doc.exists) {
+            return res.status(404).json({ message: 'Inscripción no encontrada.' });
+        }
+
+        await inscripcionRef.update(dataToUpdate);
+        res.status(200).json({ message: `Inscripción con ID ${registrationId} actualizada exitosamente` });
+    } catch (error) {
+        console.error(`Error al actualizar inscripción con ID ${registrationId}:`, error);
+        res.status(500).json({ message: 'Error interno del servidor', error: error.message });
+    }
 };
 
-// Para manejar la eliminación (desregistro) de un estudiante de una asignatura
 exports.unregisterStudentFromAssignment = async (req, res) => {
-    const { registrationId } = req.params; // Asumiendo que la inscripción tiene un ID único
-    // TODO: Implementar lógica para eliminar una inscripción
-    // Ejemplo: const inscripcionEliminada = await Inscripcion.findByIdAndDelete(registrationId);
-    // if (!inscripcionEliminada) return res.status(404).json({ message: 'Inscripción no encontrada' });
-    // res.json({ message: 'Estudiante desregistrado de la asignatura' });
-    res.status(501).json({ message: `unregisterStudentFromAssignment para ID ${registrationId} no implementado` });
+    const { registrationId } = req.params; // ID del documento de inscripción
+    try {
+        const inscripcionRef = db.collection('inscripcionesAsignaturas').doc(registrationId);
+        const doc = await inscripcionRef.get();
+
+        if (!doc.exists) {
+            return res.status(404).json({ message: 'Inscripción no encontrada.' });
+        }
+
+        await inscripcionRef.delete();
+        res.status(200).json({ message: `Estudiante desregistrado de la asignatura (inscripción con ID ${registrationId} eliminada) exitosamente` });
+    } catch (error) {
+        console.error(`Error al desregistrar estudiante de la asignatura con ID ${registrationId}:`, error);
+        res.status(500).json({ message: 'Error interno del servidor', error: error.message });
+    }
 };

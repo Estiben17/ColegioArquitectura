@@ -1,83 +1,90 @@
-// c:\Users\estib\Documents\ArquitecturaColegio\Backend\Controllers\Estudiantecontroller.js
+// Backend/Controllers/Estudiantescontroller.js
 
-// Funciones existentes (ya referenciadas en Estudianteroutes.js)
-exports.obtenerEstudiantes = async (req, res) => {
-    // TODO: Implementar lógica para obtener todos los estudiantes.
-    // Considerar filtros (faculty, documentType) y paginación desde req.query.
-    // Ejemplo: const { page = 1, limit = 10, facultad, tipoDocumento, search } = req.query;
-    // const query = {};
-    // if (facultad) query.facultad = facultad;
-    // if (tipoDocumento) query.tipoDocumento = tipoDocumento;
-    // if (search) query.$text = { $search: search }; // Si usas text index para búsqueda
-    // const estudiantes = await Estudiante.find(query).limit(limit * 1).skip((page - 1) * limit);
-    // const count = await Estudiante.countDocuments(query);
-    // res.json({ estudiantes, totalPages: Math.ceil(count / limit), currentPage: page });
-    res.status(501).json({ message: 'obtenerEstudiantes no implementado' });
+const db = require('../config/firebaseConfig'); // Importa la instancia de Firestore
+
+exports.getAllStudents = async (req, res) => {
+    try {
+        const estudiantesRef = db.collection('estudiantes');
+        const snapshot = await estudiantesRef.get();
+        const estudiantes = [];
+        snapshot.forEach(doc => {
+            estudiantes.push({ id: doc.id, ...doc.data() });
+        });
+        res.status(200).json(estudiantes);
+    } catch (error) {
+        console.error("Error al obtener todos los estudiantes:", error);
+        res.status(500).json({ message: 'Error interno del servidor', error: error.message });
+    }
 };
 
-exports.obtenerEstudiantePorId = async (req, res) => {
-    const { id } = req.params;
-    // TODO: Implementar lógica para obtener un estudiante por su ID
-    // Ejemplo: const estudiante = await Estudiante.findById(id);
-    // if (!estudiante) return res.status(404).json({ message: 'Estudiante no encontrado' });
-    // res.json(estudiante);
-    res.status(501).json({ message: `obtenerEstudiantePorId para ID ${id} no implementado` });
+exports.createStudent = async (req, res) => {
+    try {
+        // Campos basados en tu Firestore:
+        const { numeroDocumento, nombres, apellidos, correoElectronico, tipoDocumento, departamentoId, facultad } = req.body;
+
+        if (!numeroDocumento || !nombres || !apellidos || !correoElectronico || !tipoDocumento || !departamentoId || !facultad) {
+            return res.status(400).json({ message: 'Todos los campos son obligatorios para crear un estudiante.' });
+        }
+
+        // Verificar si el estudiante ya existe por su numeroDocumento (ID de documento)
+        const existingStudent = await db.collection('estudiantes').doc(numeroDocumento).get();
+        if (existingStudent.exists) {
+            return res.status(409).json({ message: `El estudiante con número de documento ${numeroDocumento} ya existe.` });
+        }
+
+        const estudianteRef = db.collection('estudiantes').doc(numeroDocumento);
+        await estudianteRef.set({
+            nombres: nombres,
+            apellidos: apellidos,
+            correoElectronico: correoElectronico,
+            tipoDocumento: tipoDocumento,
+            departamentoId: departamentoId,
+            facultad: facultad
+        });
+
+        res.status(201).json({ message: 'Estudiante creado exitosamente', estudiante: { id: numeroDocumento, ...req.body } });
+
+    } catch (error) {
+        console.error("Error al crear estudiante:", error);
+        res.status(500).json({ message: 'Error interno del servidor', error: error.message });
+    }
 };
 
-exports.crearEstudiante = async (req, res) => {
-    // TODO: Implementar lógica para crear un nuevo estudiante
-    // Ejemplo: const nuevoEstudiante = new Estudiante(req.body);
-    // await nuevoEstudiante.save();
-    // res.status(201).json({ message: 'Estudiante creado', estudiante: nuevoEstudiante });
-    res.status(501).json({ message: 'crearEstudiante no implementado' });
+exports.updateStudentById = async (req, res) => {
+    const { id } = req.params; // 'id' es el numeroDocumento
+    const dataToUpdate = req.body;
+    try {
+        if (Object.keys(dataToUpdate).length === 0) {
+            return res.status(400).json({ message: 'No hay datos para actualizar.' });
+        }
+
+        const estudianteRef = db.collection('estudiantes').doc(id);
+        const doc = await estudianteRef.get();
+        if (!doc.exists) {
+            return res.status(404).json({ message: 'Estudiante no encontrado.' });
+        }
+
+        await estudianteRef.update(dataToUpdate);
+        res.status(200).json({ message: `Estudiante con número de documento ${id} actualizado exitosamente` });
+    } catch (error) {
+        console.error(`Error al actualizar estudiante con número de documento ${id}:`, error);
+        res.status(500).json({ message: 'Error interno del servidor', error: error.message });
+    }
 };
 
-exports.actualizarEstudiante = async (req, res) => {
-    const { id } = req.params;
-    // TODO: Implementar lógica para actualizar un estudiante por su ID
-    // Ejemplo: const estudianteActualizado = await Estudiante.findByIdAndUpdate(id, req.body, { new: true });
-    // if (!estudianteActualizado) return res.status(404).json({ message: 'Estudiante no encontrado' });
-    // res.json({ message: 'Estudiante actualizado', estudiante: estudianteActualizado });
-    res.status(501).json({ message: `actualizarEstudiante para ID ${id} no implementado` });
-};
+exports.deleteStudentById = async (req, res) => {
+    const { id } = req.params; // 'id' es el numeroDocumento
+    try {
+        const estudianteRef = db.collection('estudiantes').doc(id);
+        const doc = await estudianteRef.get();
+        if (!doc.exists) {
+            return res.status(404).json({ message: 'Estudiante no encontrado.' });
+        }
 
-exports.eliminarEstudiante = async (req, res) => {
-    const { id } = req.params;
-    // TODO: Implementar lógica para eliminar un estudiante por su ID
-    // Ejemplo: const estudianteEliminado = await Estudiante.findByIdAndDelete(id);
-    // if (!estudianteEliminado) return res.status(404).json({ message: 'Estudiante no encontrado' });
-    // res.json({ message: 'Estudiante eliminado' });
-    res.status(501).json({ message: `eliminarEstudiante para ID ${id} no implementado` });
-};
-
-exports.buscarEstudiantes = async (req, res) => {
-    // TODO: Implementar lógica para buscar estudiantes basada en filtros personalizados.
-    // Similar a obtenerEstudiantes pero podría tener una lógica de búsqueda más compleja.
-    // const { nombre, facultad, tipoDocumento } = req.body; // O desde req.query
-    // const query = {};
-    // if (nombre) query.nombreCompleto = new RegExp(nombre, 'i'); // Búsqueda flexible por nombre
-    // if (facultad) query.facultad = facultad;
-    // if (tipoDocumento) query.tipoDocumento = tipoDocumento;
-    // const estudiantes = await Estudiante.find(query);
-    // res.json(estudiantes);
-    res.status(501).json({ message: 'buscarEstudiantes no implementado' });
-};
-
-// --- NUEVAS FUNCIONES ---
-
-// Para poblar el dropdown de Facultades en el filtro de Estudiantes
-exports.obtenerFacultadesParaFiltro = async (req, res) => {
-    // Esto podría obtener datos de la colección de Departamentos si son equivalentes,
-    // o de una colección específica de Facultades.
-    // Ejemplo: const facultades = await Departamento.find().distinct('nombre'); // O una lista predefinida
-    // res.json(facultades);
-    res.status(501).json({ message: 'obtenerFacultadesParaFiltro no implementado' });
-};
-
-// Para poblar el dropdown de Tipos de Documento
-exports.obtenerTiposDocumentoParaFiltro = async (req, res) => {
-    // Esto podría ser una lista predefinida o datos de una colección.
-    // Ejemplo: const tiposDocumento = ['Cédula de Ciudadanía', 'Tarjeta de Identidad', 'Cédula de Extranjería', 'Pasaporte'];
-    // res.json(tiposDocumento);
-    res.status(501).json({ message: 'obtenerTiposDocumentoParaFiltro no implementado' });
+        await estudianteRef.delete();
+        res.status(200).json({ message: `Estudiante con número de documento ${id} eliminado exitosamente` });
+    } catch (error) {
+        console.error(`Error al eliminar estudiante con número de documento ${id}:`, error);
+        res.status(500).json({ message: 'Error interno del servidor', error: error.message });
+    }
 };
