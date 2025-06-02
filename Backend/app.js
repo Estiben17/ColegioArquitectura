@@ -5,7 +5,7 @@ const PORT = process.env.PORT || 3000;
 
 // Importa tus archivos de rutas
 const asignaturaRoutes = require('./Routes/Asignaturaroutes');
-const departamentoRoutes = require('./Routes/Departamentotoutes');
+const departamentoRoutes = require('./Routes/Departamentoroutes');
 const estudianteRoutes = require('./Routes/Estudianteroutes');
 const asistenciaRoutes = require('./Routes/Asistenciaroutes');
 
