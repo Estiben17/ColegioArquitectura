@@ -1225,3 +1225,11 @@ body {
         margin-bottom: 5px;
     }
 }
+/* En tu Style.css */
+.data-table tbody tr.selected-row {
+    background-color: #e0e0e0; /* O un color de resaltado */
+    cursor: pointer;
+}
+.data-table tbody tr {
+    cursor: pointer; /* Para indicar que las filas son clickeables */
+}
