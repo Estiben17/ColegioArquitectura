@@ -1,45 +1,40 @@
+// Backend/app.js
 const express = require('express');
-const cors = require('cors');
+const bodyParser = require('body-parser');
+const cors = require('cors'); // Good practice for frontend development
+// IMPORTANT: Adjust this path if your estudiantesRoutes.js is not here.
+const estudiantesRoutes = require('./Routes/Estudianteroutes'); 
+const asignaturasRoutes = require('./routes/asignaturasRoutes');
+const asistenciasRoutes = require('./routes/asistenciasRoutes');
+const departamentosRoutes = require('./routes/departamentosRoutes');// Path from app.js to routes
+
 const app = express();
-const PORT = process.env.PORT || 3000;
-
-// Importa tus archivos de rutas
-// Asegúrate de que las rutas relativas sean correctas desde app.js
-const asignaturaRoutes = require('./Routes/Asignaturaroutes'); // <-- CORREGIDO
-const departamentoRoutes = require('./Routes/Departamentoroutes'); // <-- CORREGIDO
-const estudianteRoutes = require('./Routes/Estudianteroutes');     // <-- CORREGIDO
-const asistenciaRoutes = require('./Routes/Asistenciaroutes');      // Ajustado a la estructura que hemos visto
-
+const port = process.env.PORT || 3000;
 
 // Middleware
-app.use(express.json());
-app.use(cors());
+app.use(cors()); // Enable CORS for all origins (for development)
+app.use(bodyParser.json()); // To parse JSON request bodies
+app.use(bodyParser.urlencoded({ extended: true })); // To parse URL-encoded bodies
 
-// Rutas de la API - ASIGNAR UN PREFIJO ÚNICO A CADA GRUPO DE RUTAS
-app.use('/api/asignaturas', asignaturaRoutes); // <-- CADA UNO CON SU PROPIO PREFIJO
-app.use('/api/departamentos', departamentoRoutes); // <-- ESTO ES LO QUE NECESITAMOS
-app.use('/api/estudiantes', estudianteRoutes);
-app.use('/api/asistencias', asistenciaRoutes);
+// Define base paths for your routes
+// All routes defined in estudiantesRoutes will be prefixed with /api/estudiantes
+app.use('/api/estudiantes', estudiantesRoutes);
+app.use('/api/asignaturas', asignaturasRoutes);
+app.use('/api/asistencias', asistenciasRoutes);
+app.use('/api/departamentos', departamentosRoutes);
 
-// Ruta de prueba (opcional)
+// Basic route for testing server status
 app.get('/', (req, res) => {
-    res.send('Backend de Registro de Colegio funcionando.');
+    res.send('API de Gestión Académica está funcionando!');
 });
 
-// Manejo de rutas no encontradas (MUY RECOMENDADO!)
-app.use((req, res, next) => {
-    res.status(404).json({ message: 'Ruta no encontrada.' });
-});
-
-// Manejo de errores global (MUY RECOMENDADO!)
+// Global error handler (optional but recommended)
 app.use((err, req, res, next) => {
-    console.error(err.stack); // Registra el error en la consola del servidor
-    res.status(500).json({ message: 'Algo salió mal en el servidor!', error: err.message });
+    console.error("Unhandled error:", err.stack);
+    res.status(500).send('Algo salió mal en el servidor!');
 });
 
-
-// Iniciar el servidor
-app.listen(PORT, () => {
-    console.log(`Servidor Express escuchando en el puerto ${PORT}`);
-    console.log('¡Conexión a Firebase Firestore configurada!');
+// Start the server
+app.listen(port, () => {
+    console.log(`🚀 Servidor Express escuchando en http://localhost:${port}`);
 });

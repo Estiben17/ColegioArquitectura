@@ -4,7 +4,9 @@
     "express": "^5.1.0",
     "firebase": "^11.8.1",
     "firebase-admin": "^13.4.0",
-    "nodemon": "^3.1.10",
     "serverless-http": "^3.2.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
   }
 }

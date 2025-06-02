@@ -1,28 +1,22 @@
+// Backend/routes/estudiantesRoutes.js
 const express = require('express');
 const router = express.Router();
-const estudianteController = require('../Controllers/Estudiantecontroller');
+// IMPORTANT: Adjust this path if your estudiantesController.js is not here.
+// It should be relative to this 'estudiantesRoutes.js' file.
+const estudiantesController = require('../Controllers/Estudiantescontroller'); // Path from routes to controllers
 
-// Obtener todos los estudiantes
-router.get('/', estudianteController.obtenerEstudiantes);
+// Definir rutas para /api/estudiantes
+router.get('/', estudiantesController.obtenerEstudiantes);
+router.get('/:id', estudiantesController.obtenerEstudiantePorId);
+router.post('/', estudiantesController.crearEstudiante);
+router.put('/:id', estudiantesController.actualizarEstudiante);
+router.delete('/:id', estudiantesController.eliminarEstudiante);
 
-// Obtener un estudiante por ID
-router.get('/:id', estudianteController.obtenerEstudiantePorId);
+// Rutas para filtros
+router.get('/filtros/facultades', estudiantesController.obtenerFacultadesParaFiltro);
+router.get('/filtros/tipos-documento', estudiantesController.obtenerTiposDocumentoParaFiltro);
 
-// Crear un nuevo estudiante
-router.post('/', estudianteController.crearEstudiante);
-
-// Actualizar un estudiante
-router.put('/:id', estudianteController.actualizarEstudiante);
-
-// Eliminar un estudiante
-router.delete('/:id', estudianteController.eliminarEstudiante);
-
-// Rutas para obtener datos para filtros
-router.get('/filtros/facultades', estudianteController.obtenerFacultadesParaFiltro); // NUEVA RUTA
-router.get('/filtros/tipos-documento', estudianteController.obtenerTiposDocumentoParaFiltro); // NUEVA RUTA
-
-
-// Buscar estudiante por filtros (nombre, facultad, tipo de documento)
-router.post('/buscar', estudianteController.buscarEstudiantes); // Opcional si usas filtros personalizados
+// Ruta para búsqueda avanzada (usa POST para enviar los filtros en el body)
+router.post('/buscar', estudiantesController.buscarEstudiantes);
 
 module.exports = router;
