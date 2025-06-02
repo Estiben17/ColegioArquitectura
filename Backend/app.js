@@ -1,28 +1,42 @@
 const express = require('express');
-const cors = require('cors'); // Si tu frontend y backend están en dominios diferentes
+const cors = require('cors');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Importa tus archivos de rutas
-const asignaturaRoutes = require('./Routes/Asignaturaroutes');
-const departamentoRoutes = require('./Routes/Departamentoroutes');
-const estudianteRoutes = require('./Routes/Estudianteroutes');
-const asistenciaRoutes = require('./Routes/Asistenciaroutes');
+// Asegúrate de que las rutas relativas sean correctas desde app.js
+const asignaturaRoutes = require('./Routes/Asignaturaroutes'); // <-- CORREGIDO
+const departamentoRoutes = require('./Routes/Departamentoroutes'); // <-- CORREGIDO
+const estudianteRoutes = require('./Routes/Estudianteroutes');     // <-- CORREGIDO
+const asistenciaRoutes = require('./Routes/Asistenciaroutes');      // Ajustado a la estructura que hemos visto
+
 
 // Middleware
-app.use(express.json()); // Para parsear el cuerpo de las solicitudes JSON
-app.use(cors()); // Habilita CORS para permitir solicitudes desde tu frontend
+app.use(express.json());
+app.use(cors());
 
-// Rutas de la API
-app.use('/api', asignaturaRoutes); // Puedes usar '/api/asignaturas' dentro de AsignaturaRoutes.js
-app.use('/api', departamentoRoutes);
-app.use('/api', estudianteRoutes);
-app.use('/api', asistenciaRoutes);
+// Rutas de la API - ASIGNAR UN PREFIJO ÚNICO A CADA GRUPO DE RUTAS
+app.use('/api/asignaturas', asignaturaRoutes); // <-- CADA UNO CON SU PROPIO PREFIJO
+app.use('/api/departamentos', departamentoRoutes); // <-- ESTO ES LO QUE NECESITAMOS
+app.use('/api/estudiantes', estudianteRoutes);
+app.use('/api/asistencias', asistenciaRoutes);
 
 // Ruta de prueba (opcional)
 app.get('/', (req, res) => {
     res.send('Backend de Registro de Colegio funcionando.');
 });
+
+// Manejo de rutas no encontradas (MUY RECOMENDADO!)
+app.use((req, res, next) => {
+    res.status(404).json({ message: 'Ruta no encontrada.' });
+});
+
+// Manejo de errores global (MUY RECOMENDADO!)
+app.use((err, req, res, next) => {
+    console.error(err.stack); // Registra el error en la consola del servidor
+    res.status(500).json({ message: 'Algo salió mal en el servidor!', error: err.message });
+});
+
 
 // Iniciar el servidor
 app.listen(PORT, () => {
