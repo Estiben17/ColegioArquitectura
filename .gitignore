@@ -1,1 +1,4 @@
 node_modules
+
+# Archivos de Firebase Admin SDK
+Backend/config/firebase-admin-key.json
