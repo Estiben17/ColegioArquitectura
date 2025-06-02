@@ -5,7 +5,7 @@ const router = express.Router();
 const departamentoController = require('../Controllers/Departamentocontroller');
 
 // Obtener todos los departamentos
-router.get('/', departamentoController.getAllDepartments()); // <-- Este ya coincide
+router.get('/', departamentoController.getAllDepartments); // <-- Este ya coincide
 
 // Obtener departamento por ID
 router.get('/:id', departamentoController.getDepartmentById); // <-- ¡CORREGIDO! Estaba 'obtenerDepartamentoPorId'
