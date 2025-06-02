@@ -17,6 +17,11 @@ router.put('/:id', estudianteController.actualizarEstudiante);
 // Eliminar un estudiante
 router.delete('/:id', estudianteController.eliminarEstudiante);
 
+// Rutas para obtener datos para filtros
+router.get('/filtros/facultades', estudianteController.obtenerFacultadesParaFiltro); // NUEVA RUTA
+router.get('/filtros/tipos-documento', estudianteController.obtenerTiposDocumentoParaFiltro); // NUEVA RUTA
+
+
 // Buscar estudiante por filtros (nombre, facultad, tipo de documento)
 router.post('/buscar', estudianteController.buscarEstudiantes); // Opcional si usas filtros personalizados
 
