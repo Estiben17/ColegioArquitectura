@@ -4,9 +4,9 @@ const bodyParser = require('body-parser');
 const cors = require('cors'); // Good practice for frontend development
 // IMPORTANT: Adjust this path if your estudiantesRoutes.js is not here.
 const estudiantesRoutes = require('./Routes/Estudianteroutes'); 
-const asignaturasRoutes = require('./routes/asignaturasRoutes');
-const asistenciasRoutes = require('./routes/asistenciasRoutes');
-const departamentosRoutes = require('./routes/departamentosRoutes');// Path from app.js to routes
+const asignaturasRoutes = require('./Routes/Asignaturaroutes');
+const asistenciasRoutes = require('./Routes/Asistenciaroutes');
+const departamentosRoutes = require('./Routes/Departamentoroutes');// Path from app.js to routes
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -18,10 +18,10 @@ app.use(bodyParser.urlencoded({ extended: true })); // To parse URL-encoded bodi
 
 // Define base paths for your routes
 // All routes defined in estudiantesRoutes will be prefixed with /api/estudiantes
-app.use('/api/estudiantes', estudiantesRoutes);
-app.use('/api/asignaturas', asignaturasRoutes);
-app.use('/api/asistencias', asistenciasRoutes);
-app.use('/api/departamentos', departamentosRoutes);
+app.use('/api/estudiante', estudiantesRoutes);
+app.use('/api/asignatura', asignaturasRoutes);
+app.use('/api/asistencia', asistenciasRoutes);
+app.use('/api/departamento', departamentosRoutes);
 
 // Basic route for testing server status
 app.get('/', (req, res) => {
