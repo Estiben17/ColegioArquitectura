@@ -1,15 +1,14 @@
-var express = require('express');
-var cors = require('cors');
-var serverless = require('serverless-http');
-var port = process.env.PORT || 3000;
-var app = express();
-var asignaturaroutes = require('../../Backend/Routes/Asignaturaroutes');
+// netlify/functions/assignments.js
+const express = require('express');
+const serverless = require('serverless-http');
+const cors = require('cors');
 
-app.use(express.json());
-app.use(cors());
+const app = express(); // Crea una instancia de Express
+app.use(cors());       // Habilita CORS para todas las rutas en esta app
+app.use(express.json()); // Habilita el parsing de JSON
 
-var router = express.Router();
-router.use('/asignatura', asignaturaroutes);
+// Import your assignment routes
+const assignmentRoutes = require('../../Backend/Routes/Asignaturaroutes'); // Importa solo las rutas de asignatura
+app.use('/api/assignments', assignmentRoutes); // Monta estas rutas bajo el prefijo '/api/assignments'
 
-var handler = app.use ("/.netlify/functions", router);
-exports.handler = serverless(app);
+module.exports.handler = serverless(app); // Envuelve la app de Express para Netlify Functions

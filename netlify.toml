@@ -1,7 +1,14 @@
+# netlify.toml
+
+[build]
+  publish = "Frontend" # Donde está tu HTML/CSS/JS del frontend
+  command = "npm install && npm run copy-backend-for-functions" # Ajustamos el comando de build
+
 [functions]
-  directory = "netlify/functions"
+  directory = "netlify/functions" # Donde Netlify buscará el código de tus funciones
 
 [[redirects]]
-from = "/api/*"
-to = ".../netlify/functions/:splat"
-status = 200
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat" # Redirige a tu función api.js
+  status = 200
+  force = true
