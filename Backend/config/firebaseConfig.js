@@ -1,37 +1,34 @@
 // Backend/config/firebaseConfig.js
 
 const admin = require('firebase-admin');
-const path = require('path');
-const fs = require('fs');
+// const path = require('path'); // Ya no necesitamos 'path' si no leemos de archivo
+// const fs = require('fs'); // Ya no necesitamos 'fs' si no leemos de archivo
 const dotenv = require('dotenv');
 
-// Load environment variables from .env file
+// Load environment variables from .env file (solo para desarrollo local)
 dotenv.config();
 
-// __dirname is globally available in CommonJS modules
-// It points to the directory of the current file (Backend/config/)
-
-// Get the service account file name from environment variable
-// Fallback to 'firebaseKey.json' if the environment variable is not set
-const serviceAccountFileName = process.env.FIREBASE_SERVICE_ACCOUNT_FILE || 'firebaseKey.json';
-
-// Construct the absolute path to your service account key file
-// Assumes firebaseKey.json (or whatever name you use) is in the same 'config' directory
-const serviceAccountPath = path.resolve(__dirname, serviceAccountFileName);
+// Obtén el contenido de la clave de servicio desde la variable de entorno
+const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
 
 let serviceAccount;
-try {
-    // Read the service account file content
-    const serviceAccountContent = fs.readFileSync(serviceAccountPath, 'utf8');
-    // Parse the content as JSON
-    serviceAccount = JSON.parse(serviceAccountContent);
-    console.log(`✅ Archivo de clave de servicio '${serviceAccountFileName}' cargado exitosamente.`);
-} catch (error) {
-    console.error(`❌ ERROR: No se pudo cargar el archivo de cuenta de servicio '${serviceAccountPath}'.`);
-    console.error('Asegúrate de que el archivo exista en la carpeta Backend/config/ y el nombre sea correcto, y que sea un JSON válido.');
-    console.error('Detalle del error:', error.message);
-    process.exit(1); // Exit the application if the key cannot be loaded (critical error)
+if (serviceAccountJson) {
+    try {
+        // Parsea el contenido JSON de la variable de entorno
+        serviceAccount = JSON.parse(serviceAccountJson);
+        console.log(`✅ Clave de servicio Firebase cargada exitosamente desde la variable de entorno.`);
+    } catch (error) {
+        console.error(`❌ ERROR: No se pudo parsear el JSON de la variable de entorno FIREBASE_SERVICE_ACCOUNT_KEY.`);
+        console.error('Asegúrate de que el valor de la variable de entorno sea un JSON válido y de una sola línea.');
+        console.error('Detalle del error:', error.message);
+        process.exit(1); // Salir si la clave no se puede parsear (error crítico)
+    }
+} else {
+    console.error(`❌ ERROR: La variable de entorno FIREBASE_SERVICE_ACCOUNT_KEY no está definida.`);
+    console.error('Asegúrate de configurarla en tu entorno de despliegue y en tu archivo .env para desarrollo local.');
+    process.exit(1); // Salir si la clave no está definida (error crítico)
 }
+
 
 // Initialize Firebase Admin SDK
 try {
@@ -48,7 +45,6 @@ try {
     console.error("❌ Error al inicializar Firebase Admin SDK:", error);
     process.exit(1); // Exit if Firebase cannot be initialized (critical error)
 }
-
 
 // Export the Firestore instance for use in other modules
 const db = admin.firestore();

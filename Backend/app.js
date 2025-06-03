@@ -12,7 +12,11 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 // Middleware
-app.use(cors()); // Enable CORS for all origins (for development)
+app.use(cors({
+    origin: 'https://colegio2.netlify.app', // Replace with your actual Netlify URL
+    methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allowed methods
+    allowedHeaders: ['Content-Type', 'Authorization'] // Allowed headers
+}));
 app.use(bodyParser.json()); // To parse JSON request bodies
 app.use(bodyParser.urlencoded({ extended: true })); // To parse URL-encoded bodies
 

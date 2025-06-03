@@ -1,11 +1,9 @@
 // Backend/controllers/estudiantesController.js
-// IMPORTANT: Adjust this path if your firebaseConfig.js is not here.
-// It should be relative to this 'estudiantesController.js' file.
 const db = require('../config/firebaseConfig'); // Path from controllers to config
 
 /**
  * @desc Obtener todos los estudiantes
- * @route GET /api/estudiantes
+ * @route GET /api/estudiante
  * @access Public
  */
 exports.obtenerEstudiantes = async (req, res) => {
@@ -33,7 +31,7 @@ exports.obtenerEstudiantes = async (req, res) => {
 
 /**
  * @desc Obtener un estudiante por ID
- * @route GET /api/estudiantes/:id
+ * @route GET /api/estudiante/:id
  * @access Public
  */
 exports.obtenerEstudiantePorId = async (req, res) => {
@@ -49,7 +47,7 @@ exports.obtenerEstudiantePorId = async (req, res) => {
             return res.status(404).json({ message: `Estudiante con ID ${id} no encontrado.` });
         }
 
-        console.log(`[Controller] Estudiante ${id} encontrado. Datos:`, doc.data());
+        console.log(`[Controller] Estudiante ${id} encontrado.`);
         res.status(200).json({ id: doc.id, ...doc.data() });
     } catch (error) {
         console.error(`❌ Error al obtener estudiante con número de documento ${id}:`, error);
@@ -59,37 +57,57 @@ exports.obtenerEstudiantePorId = async (req, res) => {
 
 /**
  * @desc Crear un nuevo estudiante
- * @route POST /api/estudiantes
+ * @route POST /api/estudiante
  * @access Public
  */
 exports.crearEstudiante = async (req, res) => {
     console.log("[Controller] Petición para crear un nuevo estudiante. Body:", req.body);
+    // Destructure ALL expected fields from frontend, providing defaults for optional fields
+    const {
+        documentNumber, firstName, secondName, firstSurname, secondSurname,
+        documentType, faculty, program, birthDate, gender, semester, average,
+        email, phone, address, status // Assuming these are sent from frontend
+    } = req.body;
+
+    // Basic validation for required fields
+    if (!documentNumber || !firstName || !firstSurname || !documentType || !faculty) {
+        console.warn("[Controller] Campos obligatorios faltantes para crear estudiante.");
+        return res.status(400).json({ message: 'Error: Campos obligatorios incompletos (Número de Documento, Primer Nombre, Primer Apellido, Tipo de Documento, Facultad son requeridos).' });
+    }
+
     try {
-        const { numeroDocumento, nombres, apellidos, correoElectronico, tipoDocumento, departamentoId, facultad } = req.body;
-
-        if (!numeroDocumento || !nombres || !apellidos || !correoElectronico || !tipoDocumento || !departamentoId || !facultad) {
-            console.warn("[Controller] Campos obligatorios faltantes para crear estudiante.");
-            return res.status(400).json({ message: 'Todos los campos son obligatorios para crear un estudiante.' });
-        }
-
-        const estudianteDocRef = db.collection('estudiantes').doc(numeroDocumento);
+        const estudianteDocRef = db.collection('estudiantes').doc(documentNumber); // Use documentNumber as Firestore Document ID
         const existingStudent = await estudianteDocRef.get();
 
         if (existingStudent.exists) {
-            console.warn(`[Controller] Intento de crear estudiante con ID ${numeroDocumento} que ya existe.`);
-            return res.status(409).json({ message: `El estudiante con número de documento ${numeroDocumento} ya existe.` });
+            console.warn(`[Controller] Intento de crear estudiante con número de documento ${documentNumber} que ya existe.`);
+            return res.status(409).json({ message: `El estudiante con número de documento ${documentNumber} ya existe.` });
         }
 
-        await estudianteDocRef.set({
-            nombres, // Shorthand for nombres: nombres
-            apellidos,
-            correoElectronico,
-            tipoDocumento,
-            departamentoId,
-            facultad
-        });
-        console.log(`[Controller] Estudiante con ID ${numeroDocumento} creado exitosamente.`);
-        res.status(201).json({ message: 'Estudiante creado exitosamente', estudiante: { id: numeroDocumento, ...req.body } });
+        // Prepare the student data object for Firestore
+        const studentData = {
+            firstName: firstName,
+            secondName: secondName || null, // Store as null if not provided
+            firstSurname: firstSurname,
+            secondSurname: secondSurname || null,
+            documentType: documentType,
+            faculty: faculty,
+            program: program || null,
+            birthDate: birthDate || null,
+            gender: gender || null,
+            semester: semester ? parseInt(semester) : null, // Convert to number
+            average: average ? parseFloat(average) : null, // Convert to number
+            email: email || null,
+            phone: phone || null,
+            address: address || null,
+            status: status || 'Activo', // Default status if not provided
+            createdAt: new Date().toISOString(), // Add creation timestamp
+            updatedAt: new Date().toISOString() // Add update timestamp
+        };
+
+        await estudianteDocRef.set(studentData);
+        console.log(`[Controller] Estudiante con ID ${documentNumber} creado exitosamente.`);
+        res.status(201).json({ message: 'Estudiante creado exitosamente', estudiante: { id: documentNumber, ...studentData } });
 
     } catch (error) {
         console.error("❌ Error al crear estudiante:", error);
@@ -99,18 +117,18 @@ exports.crearEstudiante = async (req, res) => {
 
 /**
  * @desc Actualizar un estudiante por ID
- * @route PUT /api/estudiantes/:id
+ * @route PUT /api/estudiante/:id
  * @access Public
  */
 exports.actualizarEstudiante = async (req, res) => {
-    const { id } = req.params;
+    const { id } = req.params; // 'id' es el numeroDocumento
     const dataToUpdate = req.body;
     console.log(`[Controller] Petición para actualizar estudiante ID: ${id}. Datos:`, dataToUpdate);
 
     try {
         if (Object.keys(dataToUpdate).length === 0) {
             console.warn(`[Controller] No hay datos para actualizar para el estudiante ID: ${id}.`);
-            return res.status(400).json({ message: 'No hay datos para actualizar.' });
+            return res.status(400).json({ message: 'No hay datos proporcionados para actualizar.' });
         }
 
         const estudianteRef = db.collection('estudiantes').doc(id);
@@ -120,7 +138,18 @@ exports.actualizarEstudiante = async (req, res) => {
             return res.status(404).json({ message: 'Estudiante no encontrado para actualizar.' });
         }
 
-        await estudianteRef.update(dataToUpdate);
+        // Add updatedAt timestamp to the data being updated
+        const updatePayload = { ...dataToUpdate, updatedAt: new Date().toISOString() };
+
+        // Convert semester and average to numbers if they exist in dataToUpdate
+        if (updatePayload.semester) {
+            updatePayload.semester = parseInt(updatePayload.semester);
+        }
+        if (updatePayload.average) {
+            updatePayload.average = parseFloat(updatePayload.average);
+        }
+
+        await estudianteRef.update(updatePayload);
         console.log(`[Controller] Estudiante con ID ${id} actualizado exitosamente.`);
         res.status(200).json({ message: `Estudiante con número de documento ${id} actualizado exitosamente` });
     } catch (error) {
@@ -131,11 +160,11 @@ exports.actualizarEstudiante = async (req, res) => {
 
 /**
  * @desc Eliminar un estudiante por ID
- * @route DELETE /api/estudiantes/:id
+ * @route DELETE /api/estudiante/:id
  * @access Public
  */
 exports.eliminarEstudiante = async (req, res) => {
-    const { id } = req.params;
+    const { id } = req.params; // 'id' es el numeroDocumento
     console.log(`[Controller] Petición para eliminar estudiante con ID: ${id}`);
     try {
         const estudianteRef = db.collection('estudiantes').doc(id);
@@ -156,7 +185,7 @@ exports.eliminarEstudiante = async (req, res) => {
 
 /**
  * @desc Obtener lista de facultades para filtro
- * @route GET /api/estudiantes/filtros/facultades
+ * @route GET /api/estudiante/filtros/facultades
  * @access Public
  */
 exports.obtenerFacultadesParaFiltro = async (req, res) => {
@@ -167,12 +196,13 @@ exports.obtenerFacultadesParaFiltro = async (req, res) => {
         const facultades = new Set();
         snapshot.forEach(doc => {
             const data = doc.data();
-            if (data.facultad) {
-                facultades.add(data.facultad);
+            if (data.faculty) { // Use 'faculty' as per frontend
+                facultades.add(data.faculty);
             }
         });
-        console.log(`[Controller] Facultades únicas encontradas:`, Array.from(facultades));
-        res.status(200).json(Array.from(facultades));
+        const result = Array.from(facultades).sort(); // Sort for consistent order
+        console.log(`[Controller] Facultades únicas encontradas:`, result);
+        res.status(200).json(result);
     } catch (error) {
         console.error("❌ Error al obtener facultades para filtro:", error);
         res.status(500).json({ message: 'Error interno del servidor al obtener facultades', error: error.message });
@@ -181,7 +211,7 @@ exports.obtenerFacultadesParaFiltro = async (req, res) => {
 
 /**
  * @desc Obtener lista de tipos de documento para filtro
- * @route GET /api/estudiantes/filtros/tipos-documento
+ * @route GET /api/estudiante/filtros/tipos-documento
  * @access Public
  */
 exports.obtenerTiposDocumentoParaFiltro = async (req, res) => {
@@ -192,12 +222,13 @@ exports.obtenerTiposDocumentoParaFiltro = async (req, res) => {
         const tiposDocumento = new Set();
         snapshot.forEach(doc => {
             const data = doc.data();
-            if (data.tipoDocumento) {
-                tiposDocumento.add(data.tipoDocumento);
+            if (data.documentType) { // Use 'documentType' as per frontend
+                tiposDocumento.add(data.documentType);
             }
         });
-        console.log(`[Controller] Tipos de documento únicos encontrados:`, Array.from(tiposDocumento));
-        res.status(200).json(Array.from(tiposDocumento));
+        const result = Array.from(tiposDocumento).sort(); // Sort for consistent order
+        console.log(`[Controller] Tipos de documento únicos encontrados:`, result);
+        res.status(200).json(result);
     } catch (error) {
         console.error("❌ Error al obtener tipos de documento para filtro:", error);
         res.status(500).json({ message: 'Error interno del servidor al obtener tipos de documento', error: error.message });
@@ -205,31 +236,38 @@ exports.obtenerTiposDocumentoParaFiltro = async (req, res) => {
 };
 
 /**
- * @desc Buscar estudiantes por filtros (nombre, facultad, tipo de documento)
- * @route POST /api/estudiantes/buscar
+ * @desc Buscar estudiantes por filtros (nombres, apellidos, facultad, tipo de documento)
+ * @route POST /api/estudiante/buscar
  * @access Public
  */
 exports.buscarEstudiantes = async (req, res) => {
-    const { nombres, facultad, tipoDocumento } = req.body;
-    console.log(`[Controller] Petición de búsqueda de estudiantes. Filtros:`, { nombres, facultad, tipoDocumento });
+    const { firstName, firstSurname, faculty, documentType } = req.body; // Use frontend field names
+    console.log(`[Controller] Petición de búsqueda de estudiantes. Filtros:`, { firstName, firstSurname, faculty, documentType });
 
     try {
         let query = db.collection('estudiantes');
 
-        if (nombres) {
-            // Firestore does not support 'contains' queries for strings.
-            // This range query allows for prefix matching (e.g., 'Juan' matches 'Juan Perez').
-            // For true 'contains' (substring) search, consider a third-party service like Algolia.
-            query = query.where('nombres', '>=', nombres).where('nombres', '<=', nombres + '\uf8ff');
-            console.log(`[Controller] Añadiendo filtro de nombres (prefijo): ${nombres}`);
+        // Note: Firestore does not support 'contains' queries for strings or OR conditions across different fields directly.
+        // For full-text search, consider external services like Algolia.
+        // These queries are for exact matches or prefix matches.
+
+        if (firstName) {
+            // Prefix search for firstName
+            query = query.where('firstName', '>=', firstName).where('firstName', '<=', firstName + '\uf8ff');
+            console.log(`[Controller] Añadiendo filtro de primer nombre (prefijo): ${firstName}`);
         }
-        if (facultad) {
-            query = query.where('facultad', '==', facultad);
-            console.log(`[Controller] Añadiendo filtro de facultad: ${facultad}`);
+        if (firstSurname) {
+            // Prefix search for firstSurname
+            query = query.where('firstSurname', '>=', firstSurname).where('firstSurname', '<=', firstSurname + '\uf8ff');
+            console.log(`[Controller] Añadiendo filtro de primer apellido (prefijo): ${firstSurname}`);
         }
-        if (tipoDocumento) {
-            query = query.where('tipoDocumento', '==', tipoDocumento);
-            console.log(`[Controller] Añadiendo filtro de tipoDocumento: ${tipoDocumento}`);
+        if (faculty) {
+            query = query.where('faculty', '==', faculty);
+            console.log(`[Controller] Añadiendo filtro de facultad: ${faculty}`);
+        }
+        if (documentType) {
+            query = query.where('documentType', '==', documentType);
+            console.log(`[Controller] Añadiendo filtro de tipo de documento: ${documentType}`);
         }
 
         const snapshot = await query.get();
